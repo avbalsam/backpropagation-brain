@@ -26,17 +26,17 @@ Hebrew University of Jerusalem\\
 \verb+oren.forkosh@mail.huji.ac.il+
 \end{center}
 
-%TODO: Opportunistic before backpropagation
-%TODO: Add methods section for technical stuff, make brief paragraph which summarizes the backpropagation algo in a less rigorous way (just 3 neurons).
-%TODO: Our method doesn't count as retrograde signaling
+%TODO: Add methods section for technical stuff, make brief paragraph which summarizes the backpropagation algo in a less rigorous way (just 3 neurons). Done.
+%TODO: Our method doesn't count as retrograde signaling. Fixed.
 \section{Abstract}
-Backpropagation, the algorithm fundamental to the operation of artificial neural networks, has yet to be observed in the human brain. In particular, while backpropagation relies on a retrograde error signal transmitted through the network, study of human neural networks generally treats neurons as independent units which do not coordinate on a global level to optimize their weights. While the potential for retrograde signaling exists in neurons, it is not clear whether these signals propagate over long distances, let alone throughout the entire network. In this paper, we show that a Hebbian learning rule equivalent to backpropagation can be developed from a local paradigm in which neurons only communicate with their immediate neighbors and seek to optimize a local cost function. We outline one possible learning rule with this property and show that it is mathematically equivalent to the classical backpropagation algorithm developed by Rumelhart et. al. We then show that our learning rule is Hebbian, and solve a fundamental problem with its biological plausibility using attention mechanisms. Using our modified algorithm, we were able to train a neural network on a simple task, and we believe our algorithm is capable of learning more complicated functions. Our research establishes one more link between artificial and human neural networks, fostering a more complete understanding of both.
+Backpropagation, the algorithm fundamental to the operation of artificial neural networks, has yet to be observed in the human brain. In particular, while backpropagation relies on an error signal transmitted through the network in a retrograde manner, study of human neural networks generally treats neurons as independent units which do not coordinate on a global level to optimize their weights. While the potential for retrograde signaling exists in neurons, it is not clear whether these signals propagate over long distances, let alone throughout the entire network. In this paper, we show that a Hebbian learning rule equivalent to backpropagation can be developed from a local optimization paradigm in which neurons only communicate with their immediate neighbors and seek to optimize a local cost function. We outline one possible learning rule with this property and show that it is mathematically equivalent to the classical backpropagation algorithm developed by Rumelhart et. al. We then show that our learning rule is Hebbian, and solve a fundamental problem with its biological plausibility using attention mechanisms. Using our modified algorithm, we were able to train a neural network on a simple task, and we believe our algorithm is capable of learning more complicated functions. Our research establishes one more link between artificial and human neural networks, fostering a more complete understanding of both.
 
 \section{Introduction}
 Synaptic plasticity has long been recognized as an important factor in neural learning. James \cite{James1890} proposed that ``the phenomena of habit in living beings are due to the plasticity of the organic materials of which their bodies are composed.'' Later, Hebb \cite{Hebb1949} theorized that the connection between a pre- and postsynaptic neuron would be strengthened if the presynaptic neuron fired before the postsynaptic neuron, and weakened if the reverse was the case. This model has been refined over the years. \cite{Markram2012} Its more modern descendant, dubbed spike-time-dependent plasticity or STDP, includes both Hebbian and ``anti-Hebbian'' learning rules which are essentially the inverse of Hebb's model. \cite{Carlson1990} Many of the mechanisms underlying STDP have been observed in human and animal brains. \cite{Markram2011} However, the concept still requires more explanation on a theoretical level, to determine the computational mechanisms that are a consequence of STDP. In other words, while it seems clear that STDP is a feature of connections between neurons, further study is required to outline the computational and representational purpose of modulated changes in the strength of synaptic connections.
 
-To explain the nature of neuronal representations of memory and stimuli, Hebb theorized that neurons act in groups, or ``assemblies,'' each of which represents some ``distinct cognitive entity.'' \cite{Hebb1949} Further work has established that there is a hierarchical structure to these assemblies in which ``downstream `observer-reader-classifier-integrator' mechanisms'' synthesize data from other neurons representing lower-level features of stimulus data. \cite{Buzsaki2010} This framework brings to mind artificial neural networks, since they also exhibit a hierarchy in which deeper layers store higher-level features. \cite{HighLevelFeaturesANN} However, while artificial neural networks use backpropagation to allow for efficient learning even in networks with many parameters, \cite{backprop} neural networks in the brain do not coordinate on a global level to optimize their weights (synaptic efficiencies) and biases (excitabilities). \cite{Dahmen2022} Instead, when developing theoretical models to understand the computational power of STDP, our learning rules must operate on the level of the individual neuron. Somehow, neurons' local optimizations must lead to global learning behaviors. We will develop a Hebbian learning rule with this property, and show that it is, in fact, equivalent to backpropagation.
+To explain the nature of neuronal representations of memory and stimuli, Hebb theorized that neurons act in groups, or ``assemblies,'' each of which represents some ``distinct cognitive entity.'' \cite{Hebb1949} Further work has established that there is a hierarchical structure to these assemblies in which ``downstream `observer-reader-classifier-integrator' mechanisms'' synthesize data from other neurons representing lower-level features of stimulus data. \cite{Buzsaki2010} This framework brings to mind artificial neural networks, since they also exhibit a hierarchy in which deeper layers store higher-level features. \cite{HighLevelFeaturesANN} However, while artificial neural networks use backpropagation to allow for efficient learning even in networks with many parameters, \cite{backprop} neural networks in the brain do not coordinate on a global level to optimize their weights (synaptic efficiencies) and biases (excitabilities). \cite{Dahmen2022} Instead, when developing theoretical models to understand the computational power of STDP, our learning rules must operate on the level of the individual neuron. Somehow, neurons' local optimizations must lead to global learning behaviors. In this paper, we develop a Hebbian learning rule with this property, and show that it is, in fact, equivalent to backpropagation.
 
+Studies have shown that an agent must focus its attention on an object for a relatively long period of time in order to learn. \cite{Desimone2014} We theorize that attention can solve the two-phase problem, a fundamental issue we will pose regarding the biological plausibility of our learning rule. In particular, attention to an object decreases temporal differentiation in neuronal activations, allowing both steps of the backpropagation algorithm to occur synchronously.
 
 \subsection{Retrograde Signaling in the Brain}
 Although synapses were for years considered ``one way streets,'' it is now known that there are signaling molecules capable of crossing the synaptic cleft in a retrograde manner. \cite{Tao2001} These molecules include proteins such as neurotrophins, \cite{Dechant2003} gases, \cite{RodriguezGrande2017} and lipids such as endocannaboids. \cite{Mechoulam1998} It is widely theorized that the retrosynaptic transmission of these molecules plays a role in synaptic plasticity. \cite{EAlger2002}\cite{Schuman1999} We review some proposed mechanisms for retrograde signaling in the brain.
@@ -51,7 +51,6 @@ The brain cannabinoid receptor (CB1) is expressed in high levels in the cortex, 
 Although it is possible that the brain backpropagates using these retrograde signals, there is good reason to study the theory that the plasticity is primarily driven by the firing of action potentials, or the anteretrograde transmission of neurotransmitters across the synaptic cleft. Besides for their simplicitly, action-potential-driven theories of cognition are backed by numerous studies which highlight the seemingly extraneous role retrograde processes such as the transmission of NTs and endocannaboids play in synaptic plasticity. The retrograde signal propagated by NTs takes minutes to propagate along the axon, \cite{Poo2001} in contrast to action potentials, which propagate across synapses in milliseconds. Endocannabinoid-based retrograde signals are not well-understood. \cite{OhnoShosaku2014} Additionally, it is not known whether the aforementioned retrograde signals propagate over large distances. \cite{Matusica2014}
 
 As such, we would like a local learning rule in which neurons only use information immediately available to them to compute the change in their weights and biases, without relying on retrograde signaling. The learning rule that we will develop has this property, and it therefore allows for backpropagation even without a retrograde transfer of information.
-%TODO: Get paper from Oren about limitations of retrograde signals. (Not really needed, but might be nice)
 
 \subsection{Neural Networks}
 To model interactions in the brain, we will use a simple feedforward neural network. While in reality neurons fire action potential spikes to transmit information, we can model the behavior of spiking neurons by using their firing rate, or the number of spikes per unit of time, as their activation. We lose information with this model, since the temporal positioning of the spikes may encode information. By modelling the brain with an artificial neural network, we assume that the brain encodes information in the firing rates of neurons without taking into account the exact times of action potential spikes.
@@ -109,9 +108,116 @@ After a neuron releases an action potential spike, excess neurotransmitter not a
 
 While much of the research on synaptic reuptake has focused on the ability of extracellular neurotransmitter to alter reward pathways in the brain, \cite{Koob1992} we believe that reuptake may play a fundamental role in neural learning. Specifically, the quantity of neurotransmitter reabsorbed by presynaptic receptors is a function of the neuron's activation and the efficacy of the synapse. Using the ``synaptic echo'' reuptake provides, a presynaptic neuron can estimate, with a significant degree of accuracy, the synaptic efficacy of its connection to a postsynaptic neuron. This will prove important when deriving our learning rule, as neurons will use changes in the strengths of their outgoing connections to modulate changes in incoming connections.
 
+\section{Backpropagation: A Simple Overview}
+The following is a brief overview of the backpropagation algorithm. In order to simplify our derivation, we will derive the rule for a neural network with only three layers, and a single neuron in each layer. A more rigorous overview of backpropagation with mathematical context can be found in the ``Methods'' section. Here, we will denote the activations of the neurons as $a_0$, $a_1$, and $a_2$, the weights as $w_1$ and $w_2$, the biases as $b_1$ and $b_2$, and the network's activation function (which we assume is the same for all neurons) as $\sigma$. An illustration of the network can be found in figure \ref{fig:simple_ann_diagram}.
+
+\begin{figure}
+	\begin{center}
+	\begin{tikzpicture}[scale=1.0]
+		% Activation formula
+		\node[align=left, anchor=north west, font=\footnotesize] at (1.25, 4) (formula) {$a_i = \sigma\left(a_{i-1}\cdot w_i+b_i\right)$};
+		\node[draw=black, inner sep=4pt, fit=(formula)] (border) {};
+		
+		% Input layer
+		\node[circle, draw=black, minimum size=1cm] (input) at (0,0) {$a_0$};
+		
+		% Hidden layer
+		\node[circle, draw=black, minimum size=1cm] (hidden) at (0,2) {$a_1$};
+		\node[circle, draw=black, minimum size=1cm] (hidden_prev) at (-2,1) {1};
+		
+		% Output layer
+		\node[circle, draw=black, minimum size=1cm] (output) at (0,4) {$a_2$};
+		\node[circle, draw=black, minimum size=1cm] (output_prev) at (-2,3) {1};
+		
+		% Connect layers
+		\draw[->] (input) -- node[midway, right] {$w_1$} (hidden);
+		\draw[->] (hidden_prev) -- node[midway, left, above] {$b_1$} (hidden);
+		\draw[->] (hidden) -- node[midway, right] {$w_2$} (output);
+		\draw[->] (output_prev) -- node[midway, left, above] {$b_2$} (output);
+	\end{tikzpicture}
+	\caption{Diagram of a simple neural network used to simplify derivation of our local learning rule.}\label{fig:simple_ann_diagram}
+	\end{center}
+\end{figure}
+
+First, we define $z_i \equiv w_ia_{i-1} + b_i$. This quantity represents the weighted input to neuron $i$, and will be useful to make the notation simpler. Now, we define an ``error'' $\delta_i$ for each neuron, which represents the extent to which the input to that neuron contributes to undesired changes in the cost function $C$, or the partial derivative of the cost function in terms of the weighted input to that neuron $\partialderiv{C}{z_i}$. For the output neuron, we can directly compute the partial derivative of the cost function in terms of its activation $a_2$. However, this does not give us the partial derivative in terms of the \emph{input} to the neuron $z_2$, because of the nonlinearity $\sigma$. We can compute the partial derivative using the chain rule, yielding
+\begin{equation}
+	\delta_2 = \partialderiv{C}{z_2} = \partialderiv{C}{a_2}\partialderiv{a_2}{z_2} = \partialderiv{C}{a_2}\cdot\sigma'\left(z_2\right)
+\end{equation}
+To compute $\delta_i$ for $i < 2$ given $\delta_{i+1}$, we can again use the chain rule:
+\begin{equation}
+	\delta_i = \partialderiv{C}{z_i} = \partialderiv{C}{z_{i+1}}\partialderiv{z_{i+1}}{z_i} = \delta_{i+1}\partialderiv{z_{i+1}}{z_i}\label{simp2}
+\end{equation}
+Computing this partial derivative is trivial, since
+\begin{equation}
+	z_{i+1} = w_{i+1}a_i + b_{i+1} = w_{i+1}\cdot\sigma(z_i)+b_{i+1}
+\end{equation}
+Thus,
+\begin{equation}
+	\partialderiv{z_{i+1}}{z_i} = w_{i+1}\cdot\sigma'(z_i)\label{simp4}
+\end{equation}
+Putting equations \ref{simp2} and \ref{simp4} together,
+\begin{equation}
+	\delta_i  = w_{i+1}\delta_{i+1}\cdot\sigma'(z_i)\label{simp5}
+\end{equation}
+Using the chain rule, we can derive that, for all weights $w_i$ and biases $b_i$,
+\begin{equation}
+	\partialderiv{C}{w_i} = \partialderiv{C}{b_i}a_{i-1} = \delta_ia_{i-1}\label{simp6}
+\end{equation}
+Backpropagation gives us an easy way to compute the gradient of the cost function, as we can compute $\delta_i$ for all $i$ and then find the partial derivative in terms of each $w_i$ and $b_i$. For ease of notation, we will denote $\partialderiv{C}{w_i}$ as $\Delta w_i$. Then, substituting equation \ref{simp6} into equation \ref{simp5}, we can derive a learning rule which relates $\Delta w_i$ to $\Delta w_{i+1}$:
+\begin{equation}
+	\Delta w_i = w_{i+1}a_{i-1}\frac{\Delta w_{i+1}}{a_i}\cdot\sigma'(z_i)
+\end{equation}
+Now, using the fact that $x\Delta x\approx\frac{1}{2}\Delta (x^2)$,
+\begin{equation}
+	\Delta w_i\approx \frac{1}{2}a_{i-1}\frac{\sigma'\left(z_i\right)}{\sigma\left(z_i\right)}\Delta \left(\left(w_{i+1}\right)^2\right)
+\end{equation}
+This is our local learning rule, and it only uses information directly available to each individual neuron. While we derived our rule from the backpropagation equations, it can also be derived using local optimizations on the neuronal level. In particular, if each neuron attempts to increase the weight of its outgoing connections by changing the weights of its incoming connections, we end up with an equivalent learning rule. The derivation of this fact, as well as a more rigorous overview of backpropagation, can be found in ``Methods''.
+
 \section{Methods}
+\subsection{Backpropagation}
+The following is a more rigorous overview of backpropagation, which we will use for our more general derivation of our local learning rule.
+
+We will represent neural networks as a list of weight matrices $w^l$ such that $w^{l}_{jk}$ is the weight of the connection from the $k$-th neuron at layer $l-1$ to the $j$-th neuron at layer $l$, a list of bias vectors $b^l$ indexed by layer, and activation vectors $a^l$ such that $a^{l+1}=\sigma\left(w^{l+1}a^l + b^l\right)$, where $\sigma$ is a nonlinearity and $a^0$ is the input vector. We are given some cost function $C$ which, given an output vector $a^L$, where $L$ is the last layer of the network, returns some representation of the difference between the expected answer $y$ and $a^L$. One commonly used function is quadratic loss, where $C\left(a^L\right) = \sum_j \left(a^L_j - y_j\right)^2$.
+
+We would like to compute the gradient of the cost function, and use that information to modify the weights and biases, thereby moving towards a minimum. In other words, we want to find $\partialderiv{C}{w^l_{jk}}$ for every weight and $\partialderiv{C}{b^l_j}$ for every bias. Once we have these quantities, we can subtract $\eta\partialderiv{C}{w^l_{jk}}$ from each $w^l_{jk}$ and $\eta\partialderiv{C}{b^l_{j}}$ from each $b^l_j$, where $\eta$ is the learning rate of the network. Repeating this process many times, we will eventually reach a minimum cost when the gradients begin to converge.
+
+For ease of notation, we define $z_j^l \equiv w^l a^{l-1} + b^l$, so that $a^l = \sigma(z^l)$. We then define $\delta_j^l \equiv\partialderiv{C}{z_j^l}$. With a simple application of the chain rule, we can show that $\partialderiv{C}{b_j^l} = \delta_j^l$ and that $\partialderiv{C}{w_{jk}^l} = \delta_j^l a_k^{l-1}$. Therefore, computing $\delta^l$ for all $l$ is sufficient to compute the gradient of the cost function. Calculating $\delta^L$ for output layer $L$ is trivial, since the output neurons have a direct effect on the cost function:
+\begin{equation}
+	\delta_j^L = \partialderiv{C}{a_j^l}\cdot\sigma'\left(z_j^l\right)\label{eq1}
+\end{equation}
+
+Further, given $\delta^l$, we can compute $\delta^{l-1}$ using the following equation, which is also an application of the multivariable chain rule:
+\begin{equation}
+	\delta^l = \left(w^{l+1}\right)^T\delta^{l+1}\odot\sigma'\left(z^l\right)\label{eq2}
+\end{equation}
+
+After computing $\delta^l$ for all $l$ using equations \ref{eq1} and \ref{eq2}, we can compute the gradient of the cost function using the methods described above. Repeated applications of this technique will allow the network to approximate the target function.
+
+As shown above, for the $j$-th weight at layer $l$ in a backpropagating ANN with learning rate $\eta$, backpropagation gives
+\begin{equation}
+	\Delta w_{jk}^l = \eta\partialderiv{C}{w_{jk}^l} = \eta\delta_{j}^l a_k^{l-1}.\label{eq15.5}
+\end{equation}
+Rearranging terms,
+\begin{equation}
+	\delta_j^l = \frac{\Delta w_{jk}^l}{\eta a_k^{l-1}}\label{eq15}.
+\end{equation}
+Notably, the above equation is true for any $k$. Now, expanding the matrix product from equation \ref{eq2}, we get
+\begin{equation}
+	\delta_j^l = \sum_k w_{jk}^{l+1} \delta_k^{l+1}\cdot\sigma'\left(z_j^l\right)\label{eq16}.
+\end{equation}
+
+If all activations are nonzero, and the changes to the propagated error are relatively small, we can substitute \ref{eq15} into \ref{eq16}. We can assume this is the case, since the inputs to the network are temporally correlated (the network, in this case, is the human brain). Thus,
+\begin{equation}
+	\Delta w_{jk}^l = a_k^{l-1}\frac{\sigma'\left(z_j^l\right)}{\sigma\left(z_j^l\right)}\sum_i w_{ij}^{l+1}\Delta w_{ij}^{l+1}
+\end{equation}
+
+Using \ref{eq12}, we can substitute in for $w\Delta w$ to get a general learning rule in which neurons can compute the changes in their incoming weights using the change in their outgoing weights.
+\begin{equation}
+	\Delta w_{jk}^l = \frac{1}{2}\cdot \frac{\sigma'\left(z_j^l\right)}{\sigma\left(z_j^l\right)}\cdot a_k^{l-1}\cdot\Delta\left(\sum_i \left(w_{ij}^{l+1}\right)^2\right)\label{eq17}
+\end{equation}
+
 \subsection{Local Learning Rule}
-In the brain, unlike in an artificial neural network, there is no global coordination between neurons. Instead, each neuron tries to optimize a local cost function, and adjusts its weight in the direction of an optimal solution. We will propose a mechanism of this form, and show that it is equivalent to backpropagation.
+In the brain, unlike in an artificial neural network, there is no global coordination between neurons. Instead, each neuron tries to optimize a local cost function, and adjusts its weight in the direction of an optimal solution. We will propose a mechanism of this form, and show that it is equivalent to equation \ref{eq17}, and, by extension, backpropagation.
 
 Per Hebb, neurons which fire often become an integral part of neural assemblies. \cite{Hebb1949} If there is no action potential spike along a synapse, the synapse will begin to decay, and the connection between the pre- and postsynaptic neuron may weaken. Neurons which lose too many connections will have been cut off from the broader functioning of the neural network. Therefore, neurons ``want'' to have strong connections to as many postsynaptic neurons as possible in order to increase their importance to the network. However, neurons cannot directly modify their outgoing synaptic efficiencies --- if they could, neurons would increase synaptic weights \emph{ad infinitum}. Instead, neurons modify their incoming weights to provide an activation their postsynaptic counterparts will want to use.
 
@@ -180,54 +286,10 @@ Expanding $\Delta w_{ij}^{l+1}$, we get
 \end{equation}
 Hence, for any weight $w_{jk}^l$, $\Delta w_{jk}^l$ is proportional to the activation of the presynaptic neuron $a_k^{l-1}$ times the activation of the postsynaptic neuron $a_j^l$. Because we increase the synaptic efficiency if the pre- and postsynaptic neurons increase their firing rates in tandem, the synaptic efficacy should be higher for neurons which fire together consistently. Therefore, even though it is not the case that $w_{jk}^l\propto a_k^{l-1}a_j^l$, our learning rule is Hebbian, since synaptic weights increase when the relevant neurons have correlated firing rates.
 
-For our opportunistic learning rule to work in practice, neurons must have access to the synaptic efficiencies of their outgoing connections. Neurons have the capacity to attain this information, since they can estimate synaptic weights of outgoing connections using the synaptic echo, as described above.
+For our local learning rule to work in practice, neurons must have access to the synaptic efficiencies of their outgoing connections. Neurons have the capacity to attain this information, since they can estimate synaptic weights of outgoing connections using the synaptic echo, as described above.
 
-\subsection{Backpropagation: An Overview}
-The following is a brief overview of the backpropagation algorithm for mathematical context. Readers already familiar with the algorithm are free to skip to the next section.
-
-We will represent neural networks as a list of weight matrices $w^l$ such that $w^{l}_{jk}$ is the weight of the connection from the $k$-th neuron at layer $l-1$ to the $j$-th neuron at layer $l$, a list of bias vectors $b^l$ indexed by layer, and activation vectors $a^l$ such that $a^{l+1}=\sigma\left(w^{l+1}a^l + b^l\right)$, where $\sigma$ is a nonlinearity and $a^0$ is the input vector. We are given some cost function $C$ which, given an output vector $a^L$, where $L$ is the last layer of the network, returns some representation of the difference between the expected answer $y$ and $a^L$. One commonly used function is quadratic loss, where $C\left(a^L\right) = \sum_j \left(a^L_j - y_j\right)^2$.
-
-We would like to compute the gradient of the cost function, and use that information to modify the weights and biases, thereby moving towards a minimum. In other words, we want to find $\partialderiv{C}{w^l_{jk}}$ for every weight and $\partialderiv{C}{b^l_j}$ for every bias. Once we have these quantities, we can subtract $\eta\partialderiv{C}{w^l_{jk}}$ from each $w^l_{jk}$ and $\eta\partialderiv{C}{b^l_{j}}$ from each $b^l_j$, where $\eta$ is the learning rate of the network. Repeating this process many times, we will eventually reach a minimum cost when the gradients begin to converge.
-
-Naively determining the gradient for every weight and bias would require many repeated computations of the cost function $C$. The backpropagation algorithm, developed by Rumelhart et. al., allows us to remove that redundancy, allowing for an efficient way to train neural networks with many parameters. \cite{backprop}
-
-For ease of notation, we define $z_j^l \equiv w^l a^{l-1} + b^l$, so that $a^l = \sigma(z^l)$. We then define $\delta_j^l \equiv\partialderiv{C}{z_j^l}$. With a simple application of the chain rule, we can show that $\partialderiv{C}{b_j^l} = \delta_j^l$ and that $\partialderiv{C}{w_{jk}^l} = \delta_j^l a_k^{l-1}$. Therefore, computing $\delta^l$ for all $l$ is sufficient to compute the gradient of the cost function. Calculating $\delta^L$ for output layer $L$ is trivial, since the output neurons have a direct effect on the cost function:
-\begin{equation}
-	\delta_j^L = \partialderiv{C}{a_j^l}\cdot\sigma'\left(z_j^l\right)\label{eq1}
-\end{equation}
-
-Further, given $\delta^l$, we can compute $\delta^{l-1}$ using the following equation, which is also an application of the multivariable chain rule:
-\begin{equation}
-	\delta^l = \left(w^{l+1}\right)^T\delta^{l+1}\odot\sigma'\left(z^l\right)\label{eq2}
-\end{equation}
-
-After computing $\delta^l$ for all $l$ using equations \ref{eq1} and \ref{eq2}, we can compute the gradient of the cost function using the methods described above. Repeated applications of this technique will allow the network to approximate the target function.
-
-\subsection{Equivalence of Integrative Learning and Backpropagation}
-In truth, equation \ref{eq13}, and, by extension, our integrative learning rule, is equivalent to Rumelhart's backpropagation algorithm, as we will soon see. As shown above, for the $j$-th weight at layer $l$ in a backpropagating ANN with learning rate $\eta$, backpropagation gives
-\begin{equation}
-	\Delta w_{jk}^l = \eta\partialderiv{C}{w_{jk}^l} = \eta\delta_{j}^l a_k^{l-1}.\label{eq15.5}
-\end{equation}
-Rearranging terms,
-\begin{equation}
-	\delta_j^l = \frac{\Delta w_{jk}^l}{\eta a_k^{l-1}}\label{eq15}.
-\end{equation}
-Notably, the above equation is true for any $k$. Now, expanding the matrix product from equation \ref{eq2}, we get
-\begin{equation}
-	\delta_j^l = \sum_k w_{jk}^{l+1} \delta_k^{l+1}\cdot\sigma'\left(z_j^l\right)\label{eq16}.
-\end{equation}
-
-If all activations are nonzero, and the changes to the propagated error are relatively small, we can substitute \ref{eq15} into \ref{eq16}. We can assume this is the case, since the inputs to the network are temporally correlated (the network, in this case, is the human brain). Thus,
-\begin{equation}
-	\Delta w_{jk}^l = a_k^{l-1}\frac{\sigma'\left(z_j^l\right)}{\sigma\left(z_j^l\right)}\sum_i w_{ij}^{l+1}\Delta w_{ij}^{l+1}
-\end{equation}
-
-Using \ref{eq12}, we can substitute in for $w\Delta w$ to get an expression which is exactly equivalent to \ref{eq13}:
-\begin{equation}
-	\Delta w_{jk}^l = \frac{1}{2}\cdot \frac{\sigma'\left(z_j^l\right)}{\sigma\left(z_j^l\right)}\cdot a_k^{l-1}\cdot\Delta\left(\sum_i \left(w_{ij}^{l+1}\right)^2\right)
-\end{equation}
-
-While the opportunistic learning rule and the error backpropagation equation are equivalent, they are conceptually quite distinct. In contrast to the error backpropagation approach, which attempted, top down, to find the gradient with respect to the cost function, the opportunistic learning approach saw each neuron optimize its own local cost function, which then led to network-level learning behaviors. It was not at all obvious that this would be the case, since there was no global coordination between the neurons. The fact that neurons' local optimizations were able to produce behavior equivalent to backpropagation underscores the fact that backpropagation is a possible mechanism for learning in the human brain.
+\subsection{Equivalence of Learning Rules}
+While our local learning rule (equation \ref{eq13})and error backpropagation (\ref{eq17}) are equivalent, they are conceptually quite distinct. In contrast to the error backpropagation approach, which attempted, top down, to find the gradient with respect to the cost function, the opportunistic learning approach saw each neuron optimize its own local cost function, which then led to network-level learning behaviors. It was not at all obvious that this would be the case, since there was no global coordination between the neurons. The fact that neurons' local optimizations were able to produce behavior equivalent to backpropagation underscores the fact that backpropagation is a possible mechanism for learning in the human brain.
 
 \section{Two-Phase Problem}
 Unfortunately, there are some seemingly intractable issues which must be solved in order to establish the possibility that the human brain backpropagates. First and foremost among these is the problem of timescale. While the propagation of action potential spikes is extremely fast, neural plasticity is slow to change, on the timescale of minutes to hours for long-term changes. \cite{Wei2021} Further, the speed of transmission of the synaptic echo may be slower than the propagation of an action potential, causing further delay between activation and weight-change. Let us express this problem formally.
