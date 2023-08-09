@@ -175,7 +175,7 @@ This is our local learning rule, and it only uses information directly available
 
 \section{Methods}
 \subsection{Backpropagation}
-The following is a more rigorous overview of backpropagation, which we will use for our more general derivation of our local learning rule.
+The following is a more rigorous overview of backpropagation, which we will use for the more general derivation of our local learning rule.
 
 We will represent neural networks as a list of weight matrices $w^l$ such that $w^{l}_{jk}$ is the weight of the connection from the $k$-th neuron at layer $l-1$ to the $j$-th neuron at layer $l$, a list of bias vectors $b^l$ indexed by layer, and activation vectors $a^l$ such that $a^{l+1}=\sigma\left(w^{l+1}a^l + b^l\right)$, where $\sigma$ is a nonlinearity and $a^0$ is the input vector. We are given some cost function $C$ which, given an output vector $a^L$, where $L$ is the last layer of the network, returns some representation of the difference between the expected answer $y$ and $a^L$. One commonly used function is quadratic loss, where $C\left(a^L\right) = \sum_j \left(a^L_j - y_j\right)^2$.
 
