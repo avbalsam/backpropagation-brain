@@ -61,7 +61,7 @@ def softplus(z):
     return np.log(1 + np.exp(z))
 
 
-def multilayered_graph(*subset_sizes, weights):
+"""def multilayered_graph(*subset_sizes, weights):
     extents = nx.utils.pairwise(itertools.accumulate((0,) + subset_sizes))
     layers = [range(start, end) for start, end in extents]
     G = nx.Graph()
@@ -79,7 +79,7 @@ def multilayered_graph(*subset_sizes, weights):
         for (row, col), weight in np.ndenumerate(weight_mat):
             if weight != 0:
                 G.add_edge(layers[layer][col], layers[layer+1][row], weight=weight)
-    return G
+    return G"""
 
 
 def get_expected_output(position, num_squares_per_row):
@@ -188,8 +188,8 @@ class Network(object):
     def __str__(self):
         return f"Net{self.sizes}"
 
-    def visualize(self):
-        """Visualize the neurons in this network"""
+    """def visualize(self):
+        Visualize the neurons in this network
         subset_sizes = self.sizes
 
         G = multilayered_graph(*subset_sizes, weights=self.weights)
@@ -197,7 +197,7 @@ class Network(object):
         pos = nx.multipartite_layout(G, subset_key="layer")
         plt.figure(figsize=(8, 8))
         nx.draw(G, pos, node_color=color, with_labels=False)
-        plt.show()
+        plt.show()"""
 
     def get_output(self, a):
         """Return the output of the network if ``a`` is input."""
