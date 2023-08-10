@@ -8,7 +8,7 @@
 ##SBATCH --mem=16GB
 #SBATCH --array=1
 #SBATCH -D /sci/home/forkosh/git/backpropagation-brain/logs
-pwd
+cd /sci/home/forkosh/git/backpropagation-brain
 hostname
 date "+%y/%m/%d %H:%M:%S"
 # module load openmind/singularity/3.4.1
@@ -16,7 +16,8 @@ date "+%y/%m/%d %H:%M:%S"
 # module add openmind/cudnn/11.5-v8.3.3.40
 # source /home/jangh/.bashrc
 # conda activate openmind
-python /sci/home/forkosh/git/backpropagation-brain/Code/chessboard_random_walk.py
+module load python
+python ./Code/chessboard_random_walk.py
 # singularity exec --nv -B /om,/om2 /om2/user/xboix/singularity/xboix-tensorflow2.9b.simg \
 # python prednet/mnist_train.py \
 # --is_slurm=True \
