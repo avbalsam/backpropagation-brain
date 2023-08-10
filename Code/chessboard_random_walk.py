@@ -15,6 +15,7 @@ import itertools
 import math
 import os
 import random
+import time
 
 import networkx as nx
 import numpy as np
@@ -253,9 +254,11 @@ class Network(object):
 
             self.update_mini_batch(batch, eta)
 
-            if te_data and j % 1000 == 0:
+            if te_data and j % 5000 == 0:
                 error = self.evaluate(te_data)
                 error_history.append([j, error])
+
+            if te_data and j % 10000 == 0:
                 print("Batch {0}: {1}, Position: {2}".format(
                     j, error, current_position))
 
@@ -410,15 +413,22 @@ class Network(object):
 
 
 if __name__ == '__main__':
-    for delay in [11]:
-        ERROR_TIME_DELAY = delay
+    for delay in [5, 10, 15, 20, 25]:
+        for iteration in range(25):
+            print(f"Starting model for tau={delay}, iteration: {iteration}...")
+            start = time.time()
+            ERROR_TIME_DELAY = delay
 
-        ERROR_DEPENDENT_VELOCITY = True
+            ERROR_DEPENDENT_VELOCITY = True
 
-        # Base dir name to use. Each network will add on to this.
-        DIR_NAME = f"random_walk/time_delay_tests/chessboard_error_time_delay:{ERROR_TIME_DELAY}_numsquares:{NUM_SQUARES_PER_ROW}"
+            # Base dir name to use. Each network will add on to this.
+            DIR_NAME = f"random_walk/time_delay_tests_error_dependent_iterations/chessboard_error_time_delay:{ERROR_TIME_DELAY}_numsquares:{NUM_SQUARES_PER_ROW}/iteration_{iteration}"
 
-        net = Network([2, 20, 20, 20, 1])
-        print(net.dir_name)
-        net.SGD(num_batches=500000, batch_size=10, base_velocity=0.1, eta=0.1, te_data=generate_test_data(RESOLUTION, NUM_SQUARES_PER_ROW))
+            net = Network([2, 20, 20, 20, 1])
+            if os.path.exists(net.dir_name):
+                print(f"Model {net.dir_name} already exists. Skipping...")
+                continue
+
+            net.SGD(num_batches=500001, batch_size=10, base_velocity=0.1, eta=0.1, te_data=generate_test_data(RESOLUTION, NUM_SQUARES_PER_ROW))
+            print(f"Finished model for tau={delay}, iteration: {iteration}\nTime elapsed: {time.time()-start}\n\n\n\n")
 

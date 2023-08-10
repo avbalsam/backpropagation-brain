@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{subfig}
 \usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage[export]{adjustbox}
 \graphicspath{ {./Code/figures} }
 \usetikzlibrary{fit}
 \renewcommand{\baselinestretch}{1.2}
@@ -13,7 +14,7 @@
 \begin{document}
 \begin{center}
 \Large
-Attention-Based Hebbian Learning Rule Provides Biological Basis for Backpropagation in the Human Brain
+Attention-Based Learning Rule Provides Biological Basis for Backpropagation in the Human Brain
 \end{center}
 
 \begin{center}
@@ -29,20 +30,20 @@ Hebrew University of Jerusalem\\
 %TODO: Add methods section for technical stuff, make brief paragraph which summarizes the backpropagation algo in a less rigorous way (just 3 neurons). Done.
 %TODO: Our method doesn't count as retrograde signaling. Fixed.
 \section{Abstract}
-Backpropagation, the algorithm fundamental to the operation of artificial neural networks, has yet to be observed in the human brain. In particular, while backpropagation relies on an error signal transmitted through the network in a retrograde manner, study of human neural networks generally treats neurons as independent units which do not coordinate on a global level to optimize their weights. While the potential for retrograde signaling exists in neurons, it is not clear whether these signals propagate over long distances, let alone throughout the entire network. In this paper, we show that a Hebbian learning rule equivalent to backpropagation can be developed from a local optimization paradigm in which neurons only communicate with their immediate neighbors and seek to optimize a local cost function. We outline one possible learning rule with this property and show that it is mathematically equivalent to the classical backpropagation algorithm developed by Rumelhart et. al. We then show that our learning rule is Hebbian, and solve a fundamental problem with its biological plausibility using attention mechanisms. Using our modified algorithm, we were able to train a neural network on a simple task, and we believe our algorithm is capable of learning more complicated functions. Our research establishes one more link between artificial and human neural networks, fostering a more complete understanding of both.
+Backpropagation, the algorithm fundamental to the operation of artificial neural networks, has yet to be observed in the human brain. In particular, while backpropagation relies on an error signal transmitted through the network in a retrograde manner, study of human neural networks generally treats neurons as independent units which do not coordinate on a global level to optimize their weights. While the potential for retrograde signaling exists in neurons, it is not clear whether these signals propagate over long distances, let alone throughout the entire network. In this paper, we show that a learning rule equivalent to backpropagation can be developed from a local optimization paradigm in which neurons only communicate with their immediate neighbors and seek to optimize a local cost function. We outline one possible learning rule with this property and show that it is mathematically equivalent to the classical backpropagation algorithm developed by Rumelhart et. al. We then solve a fundamental problem with our model's biological plausibility using attention mechanisms. Using our modified algorithm, we were able to train a neural network on a simple task, and we believe our algorithm is capable of learning more complicated functions. Our research establishes one more link between artificial and human neural networks, fostering a more complete understanding of both.
 
 \section{Introduction}
 Synaptic plasticity has long been recognized as an important factor in neural learning. James \cite{James1890} proposed that ``the phenomena of habit in living beings are due to the plasticity of the organic materials of which their bodies are composed.'' Later, Hebb \cite{Hebb1949} theorized that the connection between a pre- and postsynaptic neuron would be strengthened if the presynaptic neuron fired before the postsynaptic neuron, and weakened if the reverse was the case. This model has been refined over the years. \cite{Markram2012} Its more modern descendant, dubbed spike-time-dependent plasticity or STDP, includes both Hebbian and ``anti-Hebbian'' learning rules which are essentially the inverse of Hebb's model. \cite{Carlson1990} Many of the mechanisms underlying STDP have been observed in human and animal brains. \cite{Markram2011} However, the concept still requires more explanation on a theoretical level, to determine the computational mechanisms that are a consequence of STDP. In other words, while it seems clear that STDP is a feature of connections between neurons, further study is required to outline the computational and representational purpose of modulated changes in the strength of synaptic connections.
 
-To explain the nature of neuronal representations of memory and stimuli, Hebb theorized that neurons act in groups, or ``assemblies,'' each of which represents some ``distinct cognitive entity.'' \cite{Hebb1949} Further work has established that there is a hierarchical structure to these assemblies in which ``downstream `observer-reader-classifier-integrator' mechanisms'' synthesize data from other neurons representing lower-level features of stimulus data. \cite{Buzsaki2010} This framework brings to mind artificial neural networks, since they also exhibit a hierarchy in which deeper layers store higher-level features. \cite{HighLevelFeaturesANN} However, while artificial neural networks use backpropagation to allow for efficient learning even in networks with many parameters, \cite{backprop} neural networks in the brain do not coordinate on a global level to optimize their weights (synaptic efficiencies) and biases (excitabilities). \cite{Dahmen2022} Instead, when developing theoretical models to understand the computational power of STDP, our learning rules must operate on the level of the individual neuron. Somehow, neurons' local optimizations must lead to global learning behaviors. In this paper, we develop a Hebbian learning rule with this property, and show that it is, in fact, equivalent to backpropagation.
+To explain the nature of neuronal representations of memory and stimuli, Hebb theorized that neurons act in groups, or ``assemblies,'' each of which represents some ``distinct cognitive entity.'' \cite{Hebb1949} Further work has established that there is a hierarchical structure to these assemblies in which ``downstream `observer-reader-classifier-integrator' mechanisms'' synthesize data from other neurons representing lower-level features of stimulus data. \cite{Buzsaki2010} This framework brings to mind artificial neural networks, since they also exhibit a hierarchy in which deeper layers store higher-level features. \cite{HighLevelFeaturesANN} However, while artificial neural networks use backpropagation to allow for efficient learning even in networks with many parameters, \cite{backprop} neural networks in the brain do not coordinate on a global level to optimize their weights (synaptic efficiencies) and biases (excitabilities). \cite{Dahmen2022} Instead, when developing theoretical models to understand the computational power of STDP, our learning rules must operate on the level of the individual neuron. Somehow, neurons' local optimizations must lead to global learning behaviors. In this paper, we develop a learning rule with this property, and show that it is, in fact, equivalent to backpropagation.
 
 Studies have shown that an agent must focus its attention on an object for a relatively long period of time in order to learn. \cite{Desimone2014} We theorize that attention can solve the two-phase problem, a fundamental issue we will pose regarding the biological plausibility of our learning rule. In particular, attention to an object decreases temporal differentiation in neuronal activations, allowing both steps of the backpropagation algorithm to occur synchronously.
 
 \subsection{Retrograde Signaling in the Brain}
-Although synapses were for years considered ``one way streets,'' it is now known that there are signaling molecules capable of crossing the synaptic cleft in a retrograde manner. \cite{Tao2001} These molecules include proteins such as neurotrophins, \cite{Dechant2003} gases, \cite{RodriguezGrande2017} and lipids such as endocannaboids. \cite{Mechoulam1998} It is widely theorized that the retrosynaptic transmission of these molecules plays a role in synaptic plasticity. \cite{EAlger2002}\cite{Schuman1999} We review some proposed mechanisms for retrograde signaling in the brain.
+Although synapses were for years considered ``one way streets,'' it is now known that there are signaling molecules capable of crossing the synaptic cleft in a retrograde manner. \cite{Tao2001} These molecules include proteins such as neurotrophins, \cite{Dechant2003} gases, \cite{RodriguezGrande2017} and lipids such as endocannaboids. \cite{Mechoulam1998} It is widely theorized that the retrosynaptic transmission of these molecules plays a role in synaptic plasticity. \cite{EAlger2002} \cite{Schuman1999} We review some proposed mechanisms for retrograde signaling in the brain.
 
 \subsubsection{Neurotrophins}
-Neurotrophins (NTs) are a family of proteins which are vital for the proper development of the vertebrate nervous system. \cite{Tao2001} NTs can change synaptic efficacy by affecting both the frequency and amplitude of synaptic currents (e.g., Levine et al. 1995). Along with the fact that expression levels of NTs are sensitive to electrical activity, this suggests that NTs are a factor in synaptic plasticity. Moreover, the fact that NTs are known to be transported in a retroaxonal manner \cite{Hendry1974} suggests that may be involved in the retrograde propagation of synaptic plasticity.
+Neurotrophins (NTs) are a family of proteins which are vital for the proper development of the vertebrate nervous system. \cite{Tao2001} NTs can change synaptic efficacy by affecting both the frequency and amplitude of synaptic currents. \cite{Levine1995} Along with the fact that expression levels of NTs are sensitive to electrical activity, this suggests that NTs are a factor in synaptic plasticity. Moreover, the fact that NTs are known to be transported in a retroaxonal manner \cite{Hendry1974} suggests that may be involved in the retrograde propagation of synaptic plasticity.
 
 \subsubsection{Endocannabinoids}
 The brain cannabinoid receptor (CB1) is expressed in high levels in the cortex, hippocampus, cerebellum and basal ganglia. \cite{Wilson2002} So far, two lipids have been identified as CB1 agonists. Unlike most neurotransmitters, these agonists are not stored, but rather rapidly synthesized in response to depolarization. Experiments (\cite{Pitler1992}, \cite{Llano1991}) have shown that brief depolarization of a neuron can suppress inhibitory GABAergic synaptic events in that cell. This phenomena is known as ``depolarization‐induced suppression of inhibition'' or DSI. It was shown that DSI affects the presynaptic terminal even though it originates from the postsynaptic neuron. Endocannabinoid signals are essentially very local and do not diffuse widely to vast brain areas. \cite{Wilson2001} While Fitzsimonds et al. \cite{Fitzsimons1997} have noted that such a retrograde signal naturally evokes the backpropagation algorithm, the computational role of these retrograde signals has not been studied in depth.
@@ -50,7 +51,7 @@ The brain cannabinoid receptor (CB1) is expressed in high levels in the cortex, 
 \subsection{Limitations of Retrograde Signaling}
 Although it is possible that the brain backpropagates using these retrograde signals, there is good reason to study the theory that the plasticity is primarily driven by the firing of action potentials, or the anteretrograde transmission of neurotransmitters across the synaptic cleft. Besides for their simplicitly, action-potential-driven theories of cognition are backed by numerous studies which highlight the seemingly extraneous role retrograde processes such as the transmission of NTs and endocannaboids play in synaptic plasticity. The retrograde signal propagated by NTs takes minutes to propagate along the axon, \cite{Poo2001} in contrast to action potentials, which propagate across synapses in milliseconds. Endocannabinoid-based retrograde signals are not well-understood. \cite{OhnoShosaku2014} Additionally, it is not known whether the aforementioned retrograde signals propagate over large distances. \cite{Matusica2014}
 
-As such, we would like a local learning rule in which neurons only use information immediately available to them to compute the change in their weights and biases, without relying on retrograde signaling. The learning rule that we will develop has this property, and it therefore allows for backpropagation even without a retrograde transfer of information.
+As such, we would like a local learning rule in which neurons only use information immediately available to them to compute the change in their weights and biases, without relying on long-distance retrograde signaling. The learning rule that we will develop has this property, and it therefore allows for backpropagation even without a long-distance retrograde transfer of information.
 
 \subsection{Neural Networks}
 To model interactions in the brain, we will use a simple feedforward neural network. While in reality neurons fire action potential spikes to transmit information, we can model the behavior of spiking neurons by using their firing rate, or the number of spikes per unit of time, as their activation. We lose information with this model, since the temporal positioning of the spikes may encode information. By modelling the brain with an artificial neural network, we assume that the brain encodes information in the firing rates of neurons without taking into account the exact times of action potential spikes.
@@ -101,15 +102,16 @@ A neural network is a list of layers of neurons. Each neuron in a layer has a we
 	\caption{Diagram of a neural network. Arrows represent weights, and nodes represent neurons, each with its own activation. The notation used here is the notation used throughout the paper. Note: When indexing the weight matrix, the first index is the index of the postsynaptic neuron, and the second is the index of the presynaptic neuron. Hence, $w^l_{jk}$ refers to the weight of the connection from the $k$-th neuron in the $(l-1)$-th layer to the $j$-th neuron in the $l$-th layer.}
 \end{figure}
 
-Neural networks attempt to optimize their weights to fit some target function $X$ by calculating the gradient of $X$ with respect to the weights of the network. This computation can be efficiently performed using backpropagation, the mathematics of which will be detailed in the ``methods'' section. Once the gradient has been calculated, neurons modify their weights in the direction of steepest descent, namely the negation of the gradient.
+Neural networks attempt to optimize their weights to fit some target function $X$ by calculating the gradient of $X$ with respect to the weights of the network. This computation can be efficiently performed using backpropagation, the mathematics of which will be detailed in the ``Methods'' section. Once the gradient has been calculated, neurons modify their weights in the direction of steepest descent, namely the negation of the gradient.
 
 \subsection{Synaptic Echo}
 After a neuron releases an action potential spike, excess neurotransmitter not accepted by the postsynaptic neuron is reabsorbed into the presynaptic neuron by way of various transport mechanisms. \cite{Rudnick1993} This reuptake allows the presynaptic neuron to recycle neurotransmitter, thereby increasing its stores of releasable molecules. \cite{Rudnick1993} Many studies have explored the role of reuptake mechanisms and transporters in modulating synaptic plasticity. \cite{Duman2016} In fact, drugs such as amphetamines and opiates specifically target neurotransmitter receptors, thereby increasing extracellular neurotransmitter concentration and modulating synaptic plasticity. \cite{Amara1998}
 
 While much of the research on synaptic reuptake has focused on the ability of extracellular neurotransmitter to alter reward pathways in the brain, \cite{Koob1992} we believe that reuptake may play a fundamental role in neural learning. Specifically, the quantity of neurotransmitter reabsorbed by presynaptic receptors is a function of the neuron's activation and the efficacy of the synapse. Using the ``synaptic echo'' reuptake provides, a presynaptic neuron can estimate, with a significant degree of accuracy, the synaptic efficacy of its connection to a postsynaptic neuron. This will prove important when deriving our learning rule, as neurons will use changes in the strengths of their outgoing connections to modulate changes in incoming connections.
 
-\section{Backpropagation: A Simple Overview}
-The following is a brief overview of the backpropagation algorithm. In order to simplify our derivation, we will derive the rule for a neural network with only three layers, and a single neuron in each layer. A more rigorous overview of backpropagation with mathematical context can be found in the ``Methods'' section. Here, we will denote the activations of the neurons as $a_0$, $a_1$, and $a_2$, the weights as $w_1$ and $w_2$, the biases as $b_1$ and $b_2$, and the network's activation function (which we assume is the same for all neurons) as $\sigma$. An illustration of the network can be found in figure \ref{fig:simple_ann_diagram}.
+\section{Results}
+\subsection{Simplified Derivation}
+In order to simplify the derivation of our local learning rule, we will derive it for a neural network with only three layers, each containing a single neuron. We start by deriving the backpropagation algorithm for this network, and then manipulate the algorithm to make it biologically plausible. A more rigorous overview of backpropagation and our learning rule with more mathematical context can be found in the ``Methods'' section. Here, we will denote the activations of the neurons as $a_0$, $a_1$, and $a_2$, the weights as $w_1$ and $w_2$, the biases as $b_1$ and $b_2$, and the network's activation function (which we assume is the same for all neurons) as $\sigma$. An illustration of the network can be found in figure \ref{fig:simple_ann_diagram}.
 
 \begin{figure}
 	\begin{center}
@@ -169,9 +171,77 @@ Backpropagation gives us an easy way to compute the gradient of the cost functio
 \end{equation}
 Now, using the fact that $x\Delta x\approx\frac{1}{2}\Delta (x^2)$,
 \begin{equation}
-	\Delta w_i\approx \frac{1}{2}a_{i-1}\frac{\sigma'\left(z_i\right)}{\sigma\left(z_i\right)}\Delta \left(\left(w_{i+1}\right)^2\right)
+	\Delta w_i\approx \frac{1}{2}a_{i-1}\frac{\sigma'\left(z_i\right)}{\sigma\left(z_i\right)}\Delta \left(\left(w_{i+1}\right)^2\right)\label{simp19}
 \end{equation}
-This is our local learning rule, and it only uses information directly available to each individual neuron. While we derived our rule from the backpropagation equations, it can also be derived using local optimizations on the neuronal level. In particular, if each neuron attempts to increase the weight of its outgoing connections by changing the weights of its incoming connections, we end up with an equivalent learning rule, the derivation of which can be found below.
+This is our local learning rule, and it only uses information directly available to each individual neuron. Thus, we have created a biologically plausible learning rule equivalent to backpropagation. While we derived our rule from the backpropagation equations, it can also be derived using local optimizations on the neuronal level. In particular, if each neuron attempts to increase the weight of its outgoing connections by changing the weights of its incoming connections, we will end up with an equivalent learning rule, the derivation of which can be found in ``Methods.''
+
+\subsection{Two-Phase Problem}
+Unfortunately, there are some seemingly intractable issues which must be solved in order to establish the possibility that the human brain backpropagates. First and foremost among these is the problem of timescale. While the propagation of action potential spikes is extremely fast, neural plasticity is slow to change, on the timescale of minutes to hours for long-term changes. \cite{Wei2021} Further, the speed of transmission of the synaptic echo may be slower than the propagation of an action potential, causing further delay between activation and weight-change. Let us express this problem formally.
+
+For the remainder of this section, let $a_j^l(t)$ be the activation of neuron $j$ at layer $l$ during discrete timestep $t$, such that $a^0(t)$ is the input to the network at time $t$. Similarly, let $\delta^l_j(t) = \partialderiv{C}{z_j^l(t)}$. We can assume that the activations effectively propagate through the network instantly. That is, all activations at a given time $a^l(t)$ can be instantly calculated from $a^0(t)$. In contrast, a neuron at layer $l$ only obtains information about $\Delta w^{l+1}(t)$ at time $t + \tau$, where $\tau$ is an arbitrary constant that is unknown to the neuron.
+
+In classical backpropagation, the network calculates all errors $\delta^l(t)$ before accepting the next input $a^0(t+1)$. This bottleneck is necessary because the network must use the activations $a^l(t)$ to compute $\Delta w^l(t)$ with
+\begin{equation}
+	\Delta w_{jk}^l(t) = \delta^l_j(t)a_k^{l-1}(t).
+\end{equation}
+
+In the human brain, this strategy is simply impossible, as input stimuli must be continually processed. However, if a neuron changes its activation to $a^l_k(t+1)$ before using $a^l_k(t)$ to calculate $\Delta w_{jk}^{l+1}(t)$, it must find some way of recovering $a^l_k(t)$ or develop a strategy which renders knowledge of the activation unnecessary.
+
+\subsection{Attention}
+In order to learn, the brain must focus its attention on a given object for a relatively long period of time. \cite{Desimone2014} We theorize that this attention can be used to solve the two-phase problem. Specifically, if temporal differentiation in the inputs to a neural network is low (i.e. the brain focuses on a given object for a relatively long period of time), our modified backpropagation algorithm can function even if neurons cannot create an accurate correspondence between activation and weight-change signals. In other words, if $a(t)\approx a(t+\tau)$, where $\tau$ is the time delay of the error signal, it does not matter that we are unable to recover $a(t)$, as we can use $a(t+\tau)$ instead for an approximately correct answer.
+
+We would like to quantify the extent to which attention can solve the two-phase problem. To do this, we simulated a simple experiment in which a mouse randomly walks across a 3x3 chessboard, and attempts to predict the color of the square it is on. For a 2x2 chessboard, this would be equivalent to a binary XOR; we chose to use a 3x3 board in order to add complexity to the problem.
+
+\begin{figure}
+	\includegraphics[scale=0.4]{mouse_chessboard}\centering
+	\caption{Visualization of an example random walk}
+\end{figure}
+
+One important factor we must take into account is the fact that, in a correctly functioning neural network, the error converges to zero. In other words, as the network trains and learns to approximate the target function, temporal variation in the error naturally decreases, and $\delta(t+\tau)$ becomes closer to $\delta(t)$ for small $\tau$. However, when the network has just begun to train and the error is large, we must decrease the speed of our random walk, thereby lowering temporal differentiation in the activation signal. To quantify this, we will divide the speed of the random walk by the norm of the output error vector $\delta^l$. If $v_0$ is the base velocity of the mouse, a hyperparameter we will set, we get the actual speed of the random walk $v$ using
+\begin{equation}
+	v = \frac{v_0}{\log(1+|\delta^L|)}
+\end{equation}
+
+To generate training data, we picked movements out from a two-dimensional gaussian distribution with mean zero and standard devation one, with both coordinates multiplied by $v$. At each timestep, we executed one of these movements, and used the resulting coordinates as input to the network. In other words, at each timestep the mouse moves in a random direction with normally distributed velocity that depends on the current error, and it attempts to predict the color of its current location on the chessboard.
+
+Because computing the norm of the error for every output would take excessive computational resources, we updated the value of $|\delta^L|$ every 1000 batches. Our neural network had two input neurons, each representing a coordinate value in the range [0, 1], three hidden layers, each with 20 neurons, and a single output neuron representing the color of the input location. We used a batch size of 10, set both the learning rate and the base velocity at 0.1, and used a sigmoidal activation function. When there was no time delay between activation and error, the network was easily able to learn the target pattern, as expected. Figure \ref{fig:example} shows the error history of the network, as well as the final chessboard pattern the network learned.
+
+\begin{figure}%
+	\centering
+	\subfloat[\centering Final representation]{{\includegraphics[width=4.5cm]{final_representation_chessboard_no_attention} }}%
+	\qquad
+	\subfloat[\centering Error history]{{\includegraphics[width=7.5cm]{error_history_chessboard_no_attention} }}%
+	\caption{Network without time delay}%
+	\label{fig:example}%
+\end{figure}
+
+Next, we added a time delay between the activation and error signal. In particular, we defined a hyperparameter $\tau$, and used $\delta(t+\tau)$ in our backpropagation calculations for $a(t)$. When the inputs were not temporally correlated, the network failed to converge, as expected. In contrast, when we trained the network using our random walk simulation, it was able to successfully learn the chessboard pattern even when $\tau$ was larger than the batch size. Figure \ref{fig:various_time_delays} shows the final representations of the network at various $\tau$.
+
+\begin{figure}%
+	
+	\begin{tabular}{llll}
+		$\tau=5,10,15$ & \includegraphics[width=.2\linewidth,valign=m]{final_rep_tau_5} & \includegraphics[width=.2\linewidth,valign=m]{final_rep_tau_10} & \includegraphics[width=.2\linewidth,valign=m]{final_rep_tau_15}\\
+		\vspace{0.1cm}\\
+		$\tau=20,25,28$ & \includegraphics[width=.2\linewidth,valign=m]{final_rep_tau_20} & \includegraphics[width=.2\linewidth,valign=m]{final_rep_tau_25} & \includegraphics[width=.2\linewidth,valign=m]{final_rep_tau_28}\\
+	\end{tabular}
+	\caption{Final representation of chessboard with various time delays.}\centering%
+	\label{fig:various_time_delays}%
+\end{figure}
+
+We had hypothesized that the network would take longer to converge for larger $\tau$, and that the accuracy of the model would be inversely proportional to the value of $\tau$. Surprisingly, though, this was not the case. Figure \ref{fig:tau_convergence_speed} shows the error history of the network for different $\tau$, and figure \ref{fig:tau_final_performance} shows the final performance of the network. While for larger $\tau$ the network failed to converge completely, for $\tau\leq 20$ there does not appear to be a correlation between smaller $\tau$ and better network performance. It would seem that attention makes the network extremely robust to time delays, such that, within limits, changes in $\tau$ do not markedly impact the network's performance.
+
+\begin{figure}
+	\includegraphics[width=10cm]{error_by_tau_figure}
+	\centering
+	\caption{Convergence of error by time delay. Each line represents a different $\tau$.}
+	\label{fig:tau_convergence_speed}
+\end{figure}
+
+\begin{figure}
+	\includegraphics[width=10cm]{final_performance_by_tau}\centering
+	\caption{Final performance of network by time delay.}
+	\label{fig:tau_final_performance}
+\end{figure}
 
 \section{Methods}
 \subsection{Backpropagation}
@@ -276,75 +346,11 @@ Substituting \ref{eq7} into \ref{eq12} and using our simplified expression for t
 \begin{equation}
 	\Delta w_{jk}^l\approx \frac{I_{jk}^l \Delta V_j^l}{2w_{jk}^l}\approx\frac{1}{2}\cdot\frac{\sigma'\left(w^l a^{l-1}\right)}{\sigma\left(w^l a^{l-1}\right)}\cdot a_k^{l-1}\Delta \left(\sum_i \left(w_{ij}^{l+1}\right)^2\right)\label{eq13}
 \end{equation}
-Now, we show analytically that our learning rule is Hebbian. First, note that
-\begin{equation}
-	\Delta w_{jk}^l\propto a_k^{l-1}\sum_i \Delta w_{ij}^{l+1}
-\end{equation}
-Expanding $\Delta w_{ij}^{l+1}$, we get
-\begin{equation}
-	\Delta w_{jk}^l\propto a_k^{l-1}\sum_i a_j^l \sum_{i'} \Delta w_{i'i}^{l+1}
-\end{equation}
-Hence, for any weight $w_{jk}^l$, $\Delta w_{jk}^l$ is proportional to the activation of the presynaptic neuron $a_k^{l-1}$ times the activation of the postsynaptic neuron $a_j^l$. Because we increase the synaptic efficiency if the pre- and postsynaptic neurons increase their firing rates in tandem, the synaptic efficacy should be higher for neurons which fire together consistently. Therefore, even though it is not the case that $w_{jk}^l\propto a_k^{l-1}a_j^l$, our learning rule is Hebbian, since synaptic weights increase when the relevant neurons have correlated firing rates.
 
 For our local learning rule to work in practice, neurons must have access to the synaptic efficiencies of their outgoing connections. Neurons have the capacity to attain this information, since they can estimate synaptic weights of outgoing connections using the synaptic echo, as described above.
 
 \subsection{Equivalence of Learning Rules}
-While our local learning rule (equation \ref{eq13})and error backpropagation (\ref{eq17}) are equivalent, they are conceptually quite distinct. In contrast to the error backpropagation approach, which attempted, top down, to find the gradient with respect to the cost function, the opportunistic learning approach saw each neuron optimize its own local cost function, which then led to network-level learning behaviors. It was not at all obvious that this would be the case, since there was no global coordination between the neurons. The fact that neurons' local optimizations were able to produce behavior equivalent to backpropagation underscores the fact that backpropagation is a possible mechanism for learning in the human brain.
-
-\section{Two-Phase Problem}
-Unfortunately, there are some seemingly intractable issues which must be solved in order to establish the possibility that the human brain backpropagates. First and foremost among these is the problem of timescale. While the propagation of action potential spikes is extremely fast, neural plasticity is slow to change, on the timescale of minutes to hours for long-term changes. \cite{Wei2021} Further, the speed of transmission of the synaptic echo may be slower than the propagation of an action potential, causing further delay between activation and weight-change. Let us express this problem formally.
-
-For the remainder of this section, let $a_j^l(t)$ be the activation of neuron $j$ at layer $l$ during discrete timestep $t$, such that $a^0(t)$ is the input to the network at time $t$. Similarly, let $\delta^l_j(t) = \partialderiv{C}{z_j^l(t)}$. We can assume that the activations effectively propagate through the network instantly. That is, all activations at a given time $a^l(t)$ can be instantly calculated from $a^0(t)$. In contrast, a neuron at layer $l$ only obtains information about $\Delta w^{l+1}(t)$ at time $t + \tau$, where $\tau$ is an arbitrary constant that is unknown to the neuron.
-
-In classical backpropagation, the network calculates all errors $\delta^l(t)$ before accepting the next input $a^0(t+1)$. This bottleneck is necessary because the network must use the activations $a^l(t)$ to compute $\Delta w^l(t)$ with
-\begin{equation}
-	\Delta w_{jk}^l(t) = \delta^l_j(t)a_k^{l-1}(t).
-\end{equation}
-
-In the human brain, this strategy is simply impossible, as input stimuli must be continually processed. However, if a neuron changes its activation to $a^l_k(t+1)$ before using $a^l_k(t)$ to calculate $\Delta w_{jk}^{l+1}(t)$, it must find some way of recovering $a^l_k(t)$ or develop a strategy which renders knowledge of the activation unnecessary.
-
-\section{Attention}
-In order to learn, the brain must focus its attention on a given object for a relatively long period of time. \cite{Desimone2014} We theorize that this attention can be used to solve the two-phase problem. Specifically, if temporal differentiation in the inputs to a neural network is low (i.e. the brain focuses on a given object for a relatively long period of time), our modified backpropagation algorithm can function even if neurons cannot create an accurate correspondence between activation and weight-change signals. In other words, if $a(t)\approx a(t+\tau)$, where $\tau$ is the time delay of the error signal, it does not matter that we are unable to recover $a(t)$, as we can use $a(t+\tau)$ instead for an approximately correct answer.
-
-We would like to quantify the extent to which attention can solve the two-phase problem. To do this, we simulated a simple experiment in which a mouse randomly walks across a 3x3 chessboard, and attempts to predict the color of the square it is on. For a 2x2 chessboard, this would be equivalent to a binary XOR; we chose to use a 3x3 board in order to add complexity to the problem.
-
-\begin{figure}
-	\includegraphics[scale=0.4]{mouse_chessboard}\centering
-	\caption{Visualization of an example random walk}
-\end{figure}
-
-One important factor we must take into account is the fact that, in a correctly functioning neural network, the error converges to zero. In other words, as the network trains and learns to approximate the target function, temporal variation in the error naturally decreases, and $\delta(t+\tau)$ becomes closer to $\delta(t)$ for small $\tau$. However, when the network has just begun to train and the error is large, we must decrease the speed of our random walk, thereby lowering temporal differentiation in the activation signal. To quantify this, we will divide the speed of the random walk by the norm of the output error vector $\delta^l$. If $v_0$ is the base velocity of the mouse, a hyperparameter we will set, we get the actual speed of the random walk $v$ using
-\begin{equation}
-	v = \frac{v_0}{\log(1+|\delta^L|)}
-\end{equation}
-
-To generate training data, we picked movements out from a two-dimensional gaussian distribution with mean zero and standard devation one, with both coordinates multiplied by $v$. At each timestep, we executed one of these movements, and used the resulting coordinates as input to the network. In other words, at each timestep the mouse moves in a random direction with normally distributed velocity that depends on the current error, and it attempts to predict the color of its current location on the chessboard.
-
-Because computing the norm of the error for every output would take excessive computational resources, we updated the value of $|\delta^L|$ every 1000 batches. Our neural network had two input neurons, each representing a coordinate value in the range [0, 1], three hidden layers, each with 20 neurons, and a single output neuron representing the color of the input location. We used a batch size of 10, set both the learning rate and the base velocity at 10, and used a sigmoidal activation function. When there was no time delay between activation and error, the network was easily able to learn the target pattern, as expected. Figure \ref{fig:example} shows the error history of the network, as well as the final chessboard pattern the network learned.
-
-\begin{figure}%
-	\centering
-	\subfloat[\centering Final representation]{{\includegraphics[width=4.5cm]{final_representation_chessboard_no_attention} }}%
-	\qquad
-	\subfloat[\centering Error history]{{\includegraphics[width=7.5cm]{error_history_chessboard_no_attention} }}%
-	\caption{Network without time delay}%
-	\label{fig:example}%
-\end{figure}
-
-Next, we added a time delay between the activation and error signal. In particular, we defined a hyperparameter $\tau$, and used $\delta(t+\tau)$ in our backpropagation calculations for $a(t)$. When the inputs were not temporally correlated, the network failed to converge, as expected. In contrast, when we trained the network using our random walk simulation, it was able to successfully learn the chessboard pattern even when $\tau$ was larger than the batch size. We had hypothesized that the network would take longer to converge for larger $\tau$. Surprisingly, though, this was not the case. Figure \ref{fig:tau_convergence_speed} shows the error history of the network for different $\tau$, and figure \ref{fig:tau_final_performance} shows the final performance of the network. While for larger $\tau$ the network failed to converge completely, for $\tau\leq 20$ there does not appear to be a correlation between smaller $\tau$ and better network performance. It would seem that attention makes the network extremely robust to time delays, such that, within limits, changes in $\tau$ do not markedly impact the network's performance.
-
-\begin{figure}
-	\includegraphics[width=10cm]{error_by_tau_figure}
-	\centering
-	\caption{Convergence of error by time delay. Each line represents a different $\tau$.}
-	\label{fig:tau_convergence_speed}
-\end{figure}
-
-\begin{figure}
-	\includegraphics[width=10cm]{final_performance_by_tau}\centering
-	\caption{Final performance of network by time delay.}
-	\label{fig:tau_final_performance}
-\end{figure}
+While our local learning rule (equation \ref{eq13}) and error backpropagation (equation \ref{eq17}) are equivalent, they are conceptually quite distinct. In contrast to the error backpropagation approach, which attempted, top down, to find the gradient with respect to the cost function, the opportunistic learning approach saw each neuron optimize its own local cost function, which then led to network-level learning behaviors. It was not at all obvious that this would be the case, since there was no global coordination between the neurons. The fact that neurons' local optimizations were able to produce behavior equivalent to backpropagation underscores the fact that backpropagation is a possible mechanism for learning in the human brain.
 
 \section{Discussion}
 In this paper, we have shown that backpropagation is a possible mechanism for learning in the human brain. In fact, starting from a local model in which neurons, without communicating, attempted to maximize their impact on the network, we were able to reach a learning rule which is exactly equivalent to backpropagation. We showed that our learning rule, and backpropagation, by extension, is Hebbian, in that the weights of connections between neurons which fire together are increased. 
