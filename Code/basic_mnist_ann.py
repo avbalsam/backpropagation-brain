@@ -34,11 +34,11 @@ def relu_prime(z):
 
 
 class Network(object):
-    activation_func = lambda x, y: relu(y)
-    activation_func_deriv = lambda x, y: relu_prime(y)
+    #activation_func = lambda x, y: relu(y)
+    #activation_func_deriv = lambda x, y: relu_prime(y)
 
-    #activation_func = lambda x, y: sigmoid(y)
-    #activation_func_deriv = lambda x, y: sigmoid_prime(y)
+    activation_func = lambda x, y: sigmoid(y)
+    activation_func_deriv = lambda x, y: sigmoid_prime(y)
 
     def __init__(self, sizes):
         """The list ``sizes`` contains the number of neurons in the
@@ -127,12 +127,7 @@ class Network(object):
             self.activation_func_deriv(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-        # Note that the variable l in the loop below is used a little
-        # differently to the notation in Chapter 2 of the book.  Here,
-        # l = 1 means the last layer of neurons, l = 2 is the
-        # second-last layer, and so on.  It's a renumbering of the
-        # scheme in the book, used here to take advantage of the fact
-        # that Python can use negative indices in lists.
+
         for l in range(2, self.num_layers):
             z = zs[-l]
             sp = self.activation_func_deriv(z)
@@ -175,5 +170,5 @@ if __name__ == '__main__':
     training_data, validation_data, test_data = \
        mnist_loader.load_data_wrapper()
 
-    net = Network([784, 30, 30, 30, 10])
-    net.SGD(training_data, 60, 10, 1, test_data=test_data)
+    net = Network([784, 100, 10])
+    net.SGD(training_data, 30, 10, 3, test_data=test_data)
