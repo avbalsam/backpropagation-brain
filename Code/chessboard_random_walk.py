@@ -233,7 +233,7 @@ class Network(object):
                     j, error), flush=True)
 
             if j % 10000 == 0:
-                if not os.path.exists(f"./{self.dir_name}"):
+                if not os.path.exists(f"./{self.dir_name}/representations"):
                     os.makedirs(f"./{self.dir_name}/representations")
                 df = pd.DataFrame(error_history, columns=["Epoch", "Error"])
                 df.to_csv(f'./{self.dir_name}/error_history.csv')
