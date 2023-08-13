@@ -394,7 +394,7 @@ class Network(object):
 if __name__ == '__main__':
     # Finds error and final performance for a variety of time delays tau. This code can be used
     # to reproduce the figures in the paper.
-    for delay in [5, 10, 15, 20, 25]:
+    for delay in range(0, 26):
         for iteration in range(25):
             print(f"Starting model for tau={delay}, iteration: {iteration}...")
             start = time.time()
