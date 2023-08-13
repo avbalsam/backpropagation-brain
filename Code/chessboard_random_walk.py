@@ -408,6 +408,8 @@ if __name__ == '__main__':
                 print(f"Model {net.dir_name} already exists. Skipping...")
                 continue
 
+            os.makedirs(net.dir_name)
+
             net.SGD(num_batches=500001, batch_size=10, base_velocity=0.1, eta=0.1,
                     te_data=generate_test_data(RESOLUTION, NUM_SQUARES_PER_ROW))
             print(
