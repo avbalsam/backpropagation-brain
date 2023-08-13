@@ -230,7 +230,7 @@ class Network(object):
 
             if j % 10000 == 0:
                 print("Batch {0}: {1}".format(
-                    j, error))
+                    j, error), flush=True)
 
             if j % 10000 == 0:
                 if not os.path.exists(f"./{self.dir_name}"):
