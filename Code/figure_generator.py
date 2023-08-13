@@ -1,3 +1,13 @@
+"""
+figure_generator.py
+~~~~~~~~~~~~~~~
+
+This code can be used to reproduce many of the figures in the paper. You may have to run some other files first, in
+order to gather the data.
+
+Author: Avi Balsam
+"""
+
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt

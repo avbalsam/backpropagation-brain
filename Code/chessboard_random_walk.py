@@ -1,21 +1,18 @@
 """
-network.py
-~~~~~~~~~~
+chessboard_random_walk.py
+~~~~~~~~~~~~~~~~
 
-A module to implement the stochastic gradient descent learning
-algorithm for a feedforward neural network.  Gradients are calculated
-using backpropagation.  Note that I have focused on making the code
-simple, easily readable, and easily modifiable.  It is not optimized,
-and omits many desirable features.
+Implementation of random walk simulation on chessboard. A mouse, walking randomly across a chessboard,
+predicts, at each timestep, the color of its current position. Velocity is modulated by the error,
+such that for high error values the velocity of the walk is slower.
 
-Credit: Nielsen, 2015
+Author: Avi Balsam
 """
 
 import itertools
 import math
-import os
-import random
 import time
+import os
 
 import networkx as nx
 import numpy as np
@@ -24,44 +21,18 @@ from PIL import Image
 from matplotlib import pyplot as plt
 from seaborn import relplot
 
-import chessboard_loader
-import os
-
+# Resolution of test data, and resolution of chessboard representations.
 RESOLUTION = (30, 30)
+
+# Number of squares on each row of the chessboard
 NUM_SQUARES_PER_ROW = 3
 
-
-def sigmoid(z):
-    """The sigmoid function."""
-    return 1.0 / (1.0 + np.exp(-z))
+# Changing this variable will change whether the velocity is dependent on error.
+ERROR_DEPENDENT_VELOCITY = True
 
 
-def sigmoid_prime(z):
-    """Derivative of the sigmoid function."""
-    return sigmoid(z) * (1 - sigmoid(z))
-
-
-def relu(z):
-    return np.maximum(z, z * 0.01) + 1
-
-
-def relu_prime(z):
-    res = relu(z)
-    res[res > 0] = 1
-    res[res < 0] = 0.01
-    res[res == 0] = 0.01
-    return res
-
-
-def relu_exp(z):
-    return relu(z) + 1
-
-
-def softplus(z):
-    return np.log(1 + np.exp(z))
-
-
-"""def multilayered_graph(*subset_sizes, weights):
+def multilayered_graph(*subset_sizes, weights):
+    """Helper function used to visualize the network."""
     extents = nx.utils.pairwise(itertools.accumulate((0,) + subset_sizes))
     layers = [range(start, end) for start, end in extents]
     G = nx.Graph()
@@ -78,13 +49,19 @@ def softplus(z):
     for layer, weight_mat in enumerate(weights):
         for (row, col), weight in np.ndenumerate(weight_mat):
             if weight != 0:
-                G.add_edge(layers[layer][col], layers[layer+1][row], weight=weight)
-    return G"""
+                G.add_edge(layers[layer][col], layers[layer + 1][row], weight=weight)
+    return G
 
 
 def get_expected_output(position, num_squares_per_row):
+    """
+    Given a 2-d input position where each coordinate is in the range [0, 1], returns the expected output.
+
+    :param position: 2-d coordinates of the mouse
+    :param num_squares_per_row: Number of squares in each row of the chessboard.
+    """
     x, y = position
-    return int(int((x // (1/num_squares_per_row)) % 2) == int((y // (1/num_squares_per_row)) % 2))
+    return int(int((x // (1 / num_squares_per_row)) % 2) == int((y // (1 / num_squares_per_row)) % 2))
 
 
 def generate_test_data(resolution, num_squares_per_row):
@@ -97,9 +74,11 @@ def generate_test_data(resolution, num_squares_per_row):
     te_data = []
     for row in range(resolution[0]):
         for col in range(resolution[1]):
+            x = row / resolution[0]
+            y = col / resolution[1]
             te_data.append(
                 (
-                    np.array(([x := row/resolution[0]], [y := col/resolution[1]])),
+                    np.array(([x], [y])),
                     get_expected_output((x, y), num_squares_per_row)
                 )
             )
@@ -107,13 +86,23 @@ def generate_test_data(resolution, num_squares_per_row):
 
 
 def generate_training_data(batch_size, base_velocity, num_squares_per_row):
-    """Returns a generator which, when given the initial position of the mouse and the current error vector,
-    gives a random walk of positions of the mouse every time it is iterated"""
+    """
+    Returns a function which, when given the initial position of the mouse and the current error vector,
+    returns the next batch of values for the position of the mouse, including expected output.
+
+    :param batch_size: Size of each batch
+    :param base_velocity: Base velocity of the mouse
+    :param num_squares_per_row: Number of squares in each row of the chessboard. Used to compute expected outputs for each square.
+    """
+
     def get_batch(current_position, error):
+        """
+        Given the current position of the mouse and the error, returns the next batch of the random walk.
+        """
         movements = np.random.default_rng().normal(loc=0.0, scale=1.0, size=(batch_size, 2))
         # Divide base velocity by norm of error vector
         if ERROR_DEPENDENT_VELOCITY:
-            velocity = base_velocity / math.log(1+error)
+            velocity = base_velocity / math.log(1 + error)
         else:
             velocity = base_velocity
         batch = []
@@ -133,63 +122,45 @@ def generate_training_data(batch_size, base_velocity, num_squares_per_row):
 
 
 class Network(object):
-    activation_func = lambda x, y: sigmoid(y)
-    activation_func_deriv = lambda x, y: sigmoid_prime(y)
-    activation_func_name = "sigmoid"
+    def sigmoid(self, z):
+        """The sigmoid function."""
+        return 1.0 / (1.0 + np.exp(-z))
 
-    #activation_func = lambda x, y: relu(y)
-    #activation_func_deriv = lambda x, y: relu_prime(y)
-    #activation_func_name = "relu"
-
-    # activation_func = lambda x, y: relu_exp(y)
-    # activation_func_deriv = lambda x, y: relu_exp(y)
-
-    # activation_func = lambda x, y: softplus(y)
-    # activation_func_deriv = lambda x, y: sigmoid(y)
-
-    # For experimental backprop testing
-    total_weight_calculations = 0
-    correct_weight_calculations = 0
+    def sigmoid_prime(self, z):
+        """Derivative of the sigmoid function."""
+        return self.sigmoid(z) * (1 - self.sigmoid(z))
 
     def __init__(self, sizes):
-        """The list ``sizes`` contains the number of neurons in the
-        respective layers of the network.  For example, if the list
-        was [2, 3, 1] then it would be a three-layer network, with the
-        first layer containing 2 neurons, the second layer 3 neurons,
-        and the third layer 1 neuron.  The biases and weights for the
-        network are initialized randomly, using a Gaussian
-        distribution with mean 0, and variance 1.  Note that the first
-        layer is assumed to be an input layer, and by convention we
-        won't set any biases for those neurons, since biases are only
-        ever used in computing the outputs from later layers."""
+        """
+        Given a list of sizes of layers, initializes a network with the specified dimension.
+        """
         self.num_layers = len(sizes)
         self.sizes = sizes
+
+        # You can substitute these for any other activation function
+        self.activation_func = self.sigmoid
+        self.activation_func_deriv = self.sigmoid_prime
 
         self.dir_name = f"{DIR_NAME}_{str(self)}"
 
         # We only need biases for the later layers
-        self.biases = [np.random.randn(y, 1)+1 for y in sizes[1:]]
+        self.biases = [np.random.randn(y, 1) + 1 for y in sizes[1:]]
 
         # Each weight is a matrix with rows = output layer and columns = input layer
-        # Same convention as book
         self.weights = [np.random.randn(y, x)
                         for x, y in zip(sizes[:-1], sizes[1:])]
 
+        # The length of the error queue is the time delay tau of the network,
+        # since errors take tau timesteps to pass through the queue
         self.error_queue = [np.zeros(self.biases[-1].shape) for _ in range(ERROR_TIME_DELAY)]
-
-        # Experimental backprop testing
-        element = (0, 0)
-        self.weight_grad_error = list()
-        for w in self.weights:
-            g = np.empty(w.shape, dtype=object)
-            g.fill(element)
-            self.weight_grad_error.append(g)
 
     def __str__(self):
         return f"Net{self.sizes}"
 
-    """def visualize(self):
-        Visualize the neurons in this network
+    def visualize(self):
+        """
+        Visualize the neurons and connections in the network, and show an image.
+        """
         subset_sizes = self.sizes
 
         G = multilayered_graph(*subset_sizes, weights=self.weights)
@@ -197,50 +168,50 @@ class Network(object):
         pos = nx.multipartite_layout(G, subset_key="layer")
         plt.figure(figsize=(8, 8))
         nx.draw(G, pos, node_color=color, with_labels=False)
-        plt.show()"""
+        plt.show()
 
     def get_output(self, a):
-        """Return the output of the network if ``a`` is input."""
+        """
+        Return the output of the network if a is input.
+
+        :param a: Input activation
+        """
         zs, activations = self.feedforward(a)
         return activations[-1]
 
     def feedforward(self, x):
-        """Runs a feedforward pass on input x"""
-        # feedforward
+        """
+        Runs a feedforward pass on input x
+
+        :param x: Input to the network
+        """
         activation = x
-        activations = [x]  # list to store all the activations, layer by layer
-        zs = []  # list to store all the z vectors, layer by layer
+        activations = [x]
+        zs = []
         for i, (b, w) in enumerate(zip(self.biases, self.weights)):
-            # Experimental method which adds extra bias to all the activations to keep them large
             z = np.dot(w, activation) + b
             zs.append(z)
 
             if i == self.num_layers - 2:
-                #print(z)
-                activation = sigmoid(z)
+                activation = self.sigmoid(z)
             else:
                 activation = self.activation_func(z)
             activations.append(activation)
-        #print(activations[-1])
         return zs, activations
 
-    def SGD(self, num_batches, batch_size, base_velocity, eta,
-            te_data=None):
-        """Train the neural network using mini-batch stochastic
-        gradient descent.  The ``training_data`` is a list of tuples
-        ``(x, y)`` representing the training inputs and the desired
-        outputs.  The other non-optional parameters are
-        self-explanatory.  If ``test_data`` is provided then the
-        network will be evaluated against the test data after each
-        epoch, and partial progress printed out.  This is useful for
-        tracking progress, but slows things down substantially.
+    def SGD(self, num_batches: int, batch_size: int, base_velocity: float, eta: float,
+            te_data: list):
+        """
+        Train the neural network using mini-batch stochastic
+        gradient descent.
 
-        :param tr_data: Generator which provides the next piece of training data
-            given the current error vector and base velocity
-        :param te_data: List of random points in the grid (not temporally correlated)"""
+        :param num_batches: Number of batches to train the network with
+        :param batch_size: Number of data points in each batch
+        :param base_velocity: Base velocity of mouse's random walk
+        :param eta: Learning rate of the network
+        :param te_data: Test data to evaluate performance of the network
+        """
         error_history = list()
-
-        if te_data: n_test = len(te_data)
 
         current_position = ([0.5], [0.5])
 
@@ -249,20 +220,19 @@ class Network(object):
         error = self.evaluate(te_data)
 
         for j in range(num_batches):
-
             current_position, batch = get_next_batch(current_position, error)
 
             self.update_mini_batch(batch, eta)
 
-            if te_data and j % 5000 == 0:
+            if j % 5000 == 0:
                 error = self.evaluate(te_data)
                 error_history.append([j, error])
 
-            if te_data and j % 10000 == 0:
-                print("Batch {0}: {1}, Position: {2}".format(
-                    j, error, current_position))
+            if j % 10000 == 0:
+                print("Batch {0}: {1}".format(
+                    j, error))
 
-            if te_data and j % 10000 == 0:
+            if j % 10000 == 0:
                 if not os.path.exists(f"./{self.dir_name}"):
                     os.makedirs(f"./{self.dir_name}/representations")
                 df = pd.DataFrame(error_history, columns=["Epoch", "Error"])
@@ -276,22 +246,24 @@ class Network(object):
                 for inp, exp_result in te_data:
                     x = int(inp[0, 0] * RESOLUTION[0])
                     y = int(inp[1, 0] * RESOLUTION[1])
-                    img_arr[x, y] = (out := net.get_output(inp)[0, 0])
+                    out = net.get_output(inp)[0, 0]
+                    img_arr[x, y] = out
 
                 img = Image.fromarray(np.array(img_arr) * 255)
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
                 img.save(f"./{self.dir_name}/representations/chessboard_representation_epoch:{j}.png")
 
-
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
-        The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
-        is the learning rate."""
+
+        :param mini_batch: List of tuples (x, y), where x is a training example and y is the expected output
+        :param eta: Learning rate of the network"""
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
+            # You can change which backprop algorithm the network uses in this line.
             delta_nabla_b, delta_nabla_w = self.backprop_attention(x, y)
             nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
@@ -301,10 +273,12 @@ class Network(object):
                        for b, nb in zip(self.biases, nabla_b)]
 
     def backprop(self, x, y):
-        """Return a tuple ``(nabla_b, nabla_w)`` representing the
-        gradient for the cost function C_x.  ``nabla_b`` and
-        ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
-        to ``self.biases`` and ``self.weights``."""
+        """
+        Classical backpropagation algorithm, with no time delay.
+
+        :param x: An input to the network
+        :param y: Expected output for input x
+        """
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
@@ -312,7 +286,8 @@ class Network(object):
 
         # backward pass
         delta = self.cost_derivative(activations[-1], y) * \
-                sigmoid_prime(zs[-1])
+                self.sigmoid_prime(zs[-1])
+
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
 
@@ -325,7 +300,11 @@ class Network(object):
         return nabla_b, nabla_w
 
     def backprop_attention(self, x, y):
-        """Normal backpropagation, but the error signal is delayed by timesteps equal to the length of the error queue"""
+        """Normal backpropagation, but the error signal is delayed by timesteps equal to the length of the error queue.
+
+        :param x: Input to the network
+        :param y: Expected output from input x
+        """
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
@@ -333,7 +312,7 @@ class Network(object):
 
         # backward pass
         correct_delta = self.cost_derivative(activations[-1], y) * \
-                sigmoid_prime(zs[-1])
+                        self.sigmoid_prime(zs[-1])
         self.error_queue.append(correct_delta)
         delta = self.error_queue.pop(0)
         nabla_b[-1] = delta
@@ -348,9 +327,16 @@ class Network(object):
         return nabla_b, nabla_w
 
     def backprop_weights(self, x, y):
-        """Backpropagation algorithm which propagates weights instead of a global error term.
+        """
+        Backpropagation algorithm which propagates weights instead of a global error term.
         The change in weight from each layer can be used to find the change in weight
-        for the previous layer, and to find the biases for the previous layer."""
+        for the previous layer, and to find the biases for the previous layer. This algorithm
+        is equivalent to backpropagation, but it is significantly slower, since we can't use
+        matrix multiplications.
+
+        :param x: Input to the network
+        :param y: Expected output from input x
+        """
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
 
@@ -358,7 +344,7 @@ class Network(object):
 
         # We only do the first step of the backward pass. This step only depends on the activations of the
         # output layer, and is easy for those neurons to compute.
-        delta = self.cost_derivative(activations[-1], y) * sigmoid_prime(zs[-1])
+        delta = self.cost_derivative(activations[-1], y) * self.sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
 
@@ -387,39 +373,32 @@ class Network(object):
                     # To get the w_jk, we can multiply the bias (error) by the activation of the input neuron
                     nabla_w[-l][j, k] = activations[-l - 1][k] * nabla_b[-l][j, 0]
 
-            # Alternate way of computing the bias from delta_w (this essentially recomputes the error)
-            # for j in range(len(nabla_b[-l])):
-            #     nabla_b[-l][j,0] = sum(
-            #         nabla_w[-l][j, k] / activations[-l - 1][k,0] for k in range(len(nabla_w[-l][j])) if abs(activations[-l - 1][k,0]) > 0.00001
-            #     ) / len(nabla_w[-l][j])
-
         return nabla_b, nabla_w
 
     def evaluate(self, test_data):
-        """Return the number of test inputs for which the neural
-        network outputs the correct result. Note that the neural
-        network's output is assumed to be the index of whichever
-        neuron in the final layer has the highest activation."""
-        # Note: Both elements of the tuples in test_data are numpy arrays of shape (1,1)
+        """Return the current performance of the network on the entire chessboard."""
         test_results = [(self.get_output(x)[0, 0], y) for (x, y) in test_data]
 
         loss = sum((y - x) ** 2 for (x, y) in test_results)
         return loss
 
     def cost_derivative(self, output_activations, y):
-        """Return the vector of partial derivatives \partial C_x /
-        \partial a for the output activations."""
-        return (output_activations - y)
+        """Return the vector of partial derivatives of the cost function
+         in terms of the output activations.
+
+         :param output_activations: Activations of the output layer.
+         :param y: Expected values of the output activations."""
+        return 2 * (output_activations - y)
 
 
 if __name__ == '__main__':
+    # Finds error and final performance for a variety of time delays tau. This code can be used
+    # to reproduce the figures in the paper.
     for delay in [5, 10, 15, 20, 25]:
         for iteration in range(25):
             print(f"Starting model for tau={delay}, iteration: {iteration}...")
             start = time.time()
             ERROR_TIME_DELAY = delay
-
-            ERROR_DEPENDENT_VELOCITY = True
 
             # Base dir name to use. Each network will add on to this.
             DIR_NAME = f"random_walk/time_delay_tests_error_dependent_iterations/chessboard_error_time_delay:{ERROR_TIME_DELAY}_numsquares:{NUM_SQUARES_PER_ROW}/iteration_{iteration}"
@@ -429,6 +408,7 @@ if __name__ == '__main__':
                 print(f"Model {net.dir_name} already exists. Skipping...")
                 continue
 
-            net.SGD(num_batches=500001, batch_size=10, base_velocity=0.1, eta=0.1, te_data=generate_test_data(RESOLUTION, NUM_SQUARES_PER_ROW))
-            print(f"Finished model for tau={delay}, iteration: {iteration}\nTime elapsed: {time.time()-start}\n\n\n\n")
-
+            net.SGD(num_batches=500001, batch_size=10, base_velocity=0.1, eta=0.1,
+                    te_data=generate_test_data(RESOLUTION, NUM_SQUARES_PER_ROW))
+            print(
+                f"Finished model for tau={delay}, iteration: {iteration}\nTime elapsed: {time.time() - start}\n\n\n\n")
