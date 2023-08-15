@@ -13,15 +13,20 @@ Credit: Nielsen, 2015
 
 #### Libraries
 # Standard library
+import os
 import random
 
 # Third-party libraries
+import time
+
 import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+from seaborn import relplot
 
 import chessboard_loader
 import mnist_loader
 
-#TODO: Test different offsets and time delays, and input classification to next activation.
 
 def relu(z):
     return np.maximum(z, z * 0.01) + 1
@@ -36,11 +41,11 @@ def relu_prime(z):
 
 
 class Network(object):
-    # activation_func = lambda x, y: sigmoid(y)
-    # activation_func_deriv = lambda x, y: sigmoid_prime(y)
+    activation_func = lambda x, y: sigmoid(y)
+    activation_func_deriv = lambda x, y: sigmoid_prime(y)
 
-    activation_func = lambda x, y: relu(y)
-    activation_func_deriv = lambda x, y: relu_prime(y)
+    # activation_func = lambda x, y: relu(y)
+    # activation_func_deriv = lambda x, y: relu_prime(y)
 
     def __init__(self, sizes, time_delay, max_offset):
         """The list ``sizes`` contains the number of neurons in the
@@ -79,6 +84,8 @@ class Network(object):
         tracking progress, but slows things down substantially."""
         test_data = list(test_data)
         training_data = list(training_data)
+
+        error_history = list()
         if test_data: n_test = len(test_data)
         n = len(training_data)
         for j in range(epochs):
@@ -89,16 +96,23 @@ class Network(object):
                 for offset in range(self.max_offset):
                     offset_mat = np.hstack((np.zeros((28, offset)), two_d))
                     frame = np.delete(offset_mat, list(range(28, offset_mat.shape[1])), axis=1)
-                    training_data_transformed.append((frame, y))
+                    training_data_transformed.append((frame.reshape((784, 1)), y))
 
             mini_batches = [
-                training_data[k:k + mini_batch_size]
+                training_data_transformed[k:k + mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data:
+                error = self.evaluate(test_data)
                 print("Epoch {0}: {1} / {2}".format(
-                    j, self.evaluate(test_data), n_test))
+                    j, error, n_test))
+                error_history.append([j, error])
+                df = pd.DataFrame(error_history, columns=["Epoch", "# Correct"])
+                df.to_csv(f'./{DIR_NAME}/error_history.csv')
+                g = relplot(df, x="Epoch", y="# Correct", kind="line")
+                g.savefig(f"./{DIR_NAME}/error_history.png")
+                plt.close()
             else:
                 print("Epoch {0} complete".format(j))
 
@@ -110,7 +124,7 @@ class Network(object):
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for x, y in mini_batch:
-            delta_nabla_b, delta_nabla_w = self.backprop(x, y)
+            delta_nabla_b, delta_nabla_w = self.backprop_attention(x, y)
             nabla_b = [nb + dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw + dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
         self.weights = [w - (eta / len(mini_batch)) * nw
@@ -118,7 +132,7 @@ class Network(object):
         self.biases = [b - (eta / len(mini_batch)) * nb
                        for b, nb in zip(self.biases, nabla_b)]
 
-    def backprop(self, x, y):
+    def backprop_attention(self, x, y):
         """Return a tuple ``(nabla_b, nabla_w)`` representing the
         gradient for the cost function C_x.  ``nabla_b`` and
         ``nabla_w`` are layer-by-layer lists of numpy arrays, similar
@@ -184,8 +198,29 @@ if __name__ == '__main__':
     # net = Network([2, 30, 2])
     # net.SGD(training_data, 60, 10, .1, test_data=test_data)
 
-    training_data, validation_data, test_data = \
-        mnist_loader.load_data_wrapper()
+    for delay in range(0, 26):
+        for iteration in range(25):
+            training_data, validation_data, test_data = \
+                mnist_loader.load_data_wrapper()
 
-    net = Network([784, 500, 10], time_delay=0, max_offset=1)
-    net.SGD(training_data, 60, 100, 0.001, test_data=test_data)
+            print(f"Starting model for tau={delay}, iteration: {iteration}...")
+            start = time.time()
+            ERROR_TIME_DELAY = delay
+
+            # Base dir name to use. Each network will add on to this.
+            DIR_NAME = f"mnist_attention/time_delay_tests_error_dependent_iterations/chessboard_error_time_delay:{ERROR_TIME_DELAY}/iteration_{iteration}"
+
+            net = Network([784, 100, 10], time_delay=delay, max_offset=14)
+            if os.path.exists(DIR_NAME):
+                print(f"Model {DIR_NAME} already exists. Skipping...")
+                continue
+            try:
+                os.makedirs(DIR_NAME)
+            except FileExistsError:
+                print(f"Model {DIR_NAME} already exists. Skipping...")
+                continue
+
+            net.SGD(training_data, 60, 100, 3, test_data=test_data)
+            print(
+                f"Finished model for tau={delay}, iteration: {iteration}\nTime elapsed: {time.time() - start}\n\n\n\n"
+            )
