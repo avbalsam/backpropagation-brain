@@ -24,7 +24,7 @@ def get_csv_error_by_tau_iteration(tau: int, iteration: int):
     try:
         return pd.read_csv(f"random_walk/time_delay_tests_error_dependent_iterations/chessboard_error_time_delay:{tau}_numsquares:3/iteration_{iteration}_Net[2, 20, 20, 20, 1]/error_history.csv", index_col=0)
     except FileNotFoundError:
-        return
+        return None
 
 
 def get_error_by_tau_figure(tau_list):
@@ -55,7 +55,7 @@ def get_averaged_error_by_tau_figure(tau_list):
     for tau in tau_list:
         iteration = 0
         ds = []
-        while d := get_csv_error_by_tau_iteration(tau, iteration):
+        while (d := get_csv_error_by_tau_iteration(tau, iteration)) is not None:
             print(f"Successfully found dataframe for tau={tau} and iteration={iteration}...")
             ds.append(d.rename(columns={"Error": f"{tau}"}).loc[:, d.columns != "Epoch"])
             iteration += 1
@@ -106,8 +106,9 @@ def get_averaged_final_performance_by_tau_figure(max_tau):
     for tau in range(max_tau):
         iteration = 0
         ds = []
-        while d := get_csv_error_by_tau_iteration(tau, iteration):
+        while (d := get_csv_error_by_tau_iteration(tau, iteration)) is not None:
             ds.append(d)
+            iteration += 1
 
         if ds:
             df = pd.concat(ds).reset_index().groupby("index").mean()
@@ -131,13 +132,17 @@ def generate_error_history_plot_from_csv(csv_filepath):
 
 
 if __name__ == "__main__":
-    get_error_by_tau_figure([0, 1, 5, 10, 20, 25])
+    # get_error_by_tau_figure([0, 1, 5, 10, 20, 25])
+    #
+    # plt.close()
+    #
+    # get_final_performance_by_tau_figure(50)
+    #
+    # plt.close()
+    #
+    # generate_error_history_plot_from_csv("./random_walk_iterations/successful_test_without_attention/error_history.csv")
+    get_averaged_error_by_tau_figure([0, 5, 10, 15, 20, 25])
 
     plt.close()
 
-    get_final_performance_by_tau_figure(50)
-
-    plt.close()
-
-    generate_error_history_plot_from_csv("./random_walk/successful_test_without_attention/error_history.csv")
-
+    get_averaged_final_performance_by_tau_figure(25)

@@ -228,10 +228,10 @@ Next, we added a time delay between the activation and error signal. In particul
 	\label{fig:various_time_delays}%
 \end{figure}
 
-We had hypothesized that the network would take longer to converge for larger $\tau$, and that the accuracy of the model would be inversely proportional to the value of $\tau$. Surprisingly, though, this was not the case. Figure \ref{fig:tau_convergence_speed} shows the error history of the network for different $\tau$, and figure \ref{fig:tau_final_performance} shows the final performance of the network. While for larger $\tau$ the network failed to converge completely, for $\tau\leq 20$ there does not appear to be a correlation between smaller $\tau$ and better network performance. It would seem that attention makes the network extremely robust to time delays, such that, within limits, changes in $\tau$ do not markedly impact the network's performance.
+We had hypothesized that the network would take longer to converge for larger $\tau$, and that the accuracy of the model would be inversely proportional to the value of $\tau$. Although this was the case, the effect was not as nearly as pronounced as we had expected for small $\tau$. We tracked the error history and final representations for different $\tau$, running our simulation $n=25$ times for each $\tau$ to achieve statistical significance. Figure \ref{fig:tau_convergence_speed} shows the error history of the network for different $\tau$, and figure \ref{fig:tau_final_performance} shows the final performance of the network. While for larger $\tau$ the network failed to converge completely, for $\tau\leq 10$ the effect of the time delay on the convergence speed of the network is minimal. It would seem that attention makes the network extremely robust to time delays, such that, within limits, changes in $\tau$ do not markedly impact the network's performance.
 
 \begin{figure}
-	\includegraphics[width=10cm]{error_by_tau_figure}
+	\includegraphics[width=10cm]{averaged_error_by_tau_figure}
 	\centering
 	\caption{Convergence of error by time delay. Each line represents a different $\tau$.}
 	\label{fig:tau_convergence_speed}
