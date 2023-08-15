@@ -10,9 +10,6 @@ function usually called by our neural network code.
 
 #### Libraries
 # Standard library
-import gzip
-
-from keras.datasets import mnist
 
 import numpy as np
 
