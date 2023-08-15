@@ -1,14 +1,11 @@
 """
-network.py
+mnist_random_walk.py
 ~~~~~~~~~~
 
-A module to implement the stochastic gradient descent learning
-algorithm for a feedforward neural network.  Gradients are calculated
-using backpropagation.  Note that I have focused on making the code
-simple, easily readable, and easily modifiable.  It is not optimized,
-and omits many desirable features.
+Implements attention for MNIST task by slowly moving the image across the screen.
+This allows us to test the effectiveness of attention on distinct tasks.
 
-Credit: Nielsen, 2015
+Author: Avi Balsam
 """
 
 #### Libraries
@@ -24,7 +21,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from seaborn import relplot
 
-import chessboard_loader
 import mnist_loader
 
 

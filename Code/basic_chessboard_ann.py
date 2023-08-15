@@ -1,13 +1,16 @@
 """
-network.py
+basic_chessboard_ann.py
 ~~~~~~~~~~
 
-A module to implement the stochastic gradient descent learning
-algorithm for a feedforward neural network.  Gradients are calculated
-using backpropagation.  Note that I have focused on making the code
-simple, easily readable, and easily modifiable.  It is not optimized,
-and omits many desirable features.
+Code to train neural network on chessboard task without random walk.
+Instead of using values in the range [0,1] for coordinate values,
+this script uses integers representing the pixel. Hence, it is
+possible to modify the board size, or the number of pixels per row.
+I found that this version of the chessboard task was much less
+effective than the version in chessboard_random_walk.py. Much of
+the code for this model was taken from Nielsen's book.
 
+Author: Avi Balsam
 Credit: Nielsen, 2015
 """
 
